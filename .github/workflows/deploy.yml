@@ -1,0 +1,65 @@
+name: Deploy Two-Container App
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  RESOURCE_GROUP: prototype01-rg
+  CONTAINER_ENV: prototype-env
+  LOCATION: westeurope
+  GHCR_REGISTRY: ghcr.io
+  GHCR_USER: ${{ secrets.GHCR_USERNAME }}
+  GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Log in to GHCR
+      run: echo "${{ env.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ env.GHCR_USER }} --password-stdin
+
+    - name: Build and push service-a
+      run: |
+        docker build -t ghcr.io/${{ env.GHCR_USER }}/service-a:latest ./service-a
+        docker push ghcr.io/${{ env.GHCR_USER }}/service-a:latest
+
+    - name: Build and push service-b
+      run: |
+        docker build -t ghcr.io/${{ env.GHCR_USER }}/service-b:latest ./service-b
+        docker push ghcr.io/${{ env.GHCR_USER }}/service-b:latest
+
+    - name: Azure login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Deploy Service B
+      run: |
+        az containerapp create \
+          --name service-b \
+          --resource-group $RESOURCE_GROUP \
+          --environment $CONTAINER_ENV \
+          --image ghcr.io/${{ env.GHCR_USER }}/service-b:latest \
+          --target-port 8000 \
+          --ingress internal \
+          --registry-server ghcr.io \
+          --registry-username $GHCR_USER \
+          --registry-password $GHCR_TOKEN
+
+    - name: Deploy Service A
+      run: |
+        az containerapp create \
+          --name service-a \
+          --resource-group $RESOURCE_GROUP \
+          --environment $CONTAINER_ENV \
+          --image ghcr.io/${{ env.GHCR_USER }}/service-a:latest \
+          --target-port 8000 \
+          --ingress external \
+          --env-vars SERVICE_B_URL=http://service-b:8000 \
+          --registry-server ghcr.io \
+          --registry-username $GHCR_USER \
+          --registry-password $GHCR_TOKEN
