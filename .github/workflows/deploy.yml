@@ -51,12 +51,16 @@ jobs:
           --registry-password ${{ env.GHCR_TOKEN }} \
           --revision-suffix b-${{ github.run_number }} \
           --min-replicas 0 \
-          --max-replicas 1 || \
+          --max-replicas 1 \
+          --cpu 0.25 \
+          --memory 0.5Gi || \
         az containerapp update \
           --name service-b \
           --resource-group $RESOURCE_GROUP \
           --image ghcr.io/${{ env.GHCR_USER }}/service-b:latest \
-          --revision-suffix b-${{ github.run_number }}
+          --revision-suffix b-${{ github.run_number }} \
+          --cpu 0.25 \
+          --memory 0.5Gi
 
     - name: Get Service B FQDN
       id: service-b-fqdn
@@ -79,9 +83,13 @@ jobs:
           --registry-password ${{ env.GHCR_TOKEN }} \
           --revision-suffix a-${{ github.run_number }} \
           --min-replicas 0 \
-          --max-replicas 1 || \
+          --max-replicas 1 \
+          --cpu 0.25 \
+          --memory 0.5Gi || \
         az containerapp update \
           --name service-a \
           --resource-group $RESOURCE_GROUP \
           --image ghcr.io/${{ env.GHCR_USER }}/service-a:latest \
-          --revision-suffix a-${{ github.run_number }}
+          --revision-suffix a-${{ github.run_number }} \
+          --cpu 0.25 \
+          --memory 0.5Gi
