@@ -3,11 +3,13 @@ services:
   service-a:
     build: ./service-a
     ports:
-      - "8080:8000"
+      - "8001:8000"
+    environment:
+      - SERVICE_B_URL=http://service-b:8000
     depends_on:
       - service-b
 
   service-b:
     build: ./service-b
     ports:
-      - "8081:8000"
+      - "8002:8000"

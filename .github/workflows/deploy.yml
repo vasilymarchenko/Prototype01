@@ -58,6 +58,12 @@ jobs:
           --image ghcr.io/${{ env.GHCR_USER }}/service-b:latest \
           --revision-suffix b-${{ github.run_number }}
 
+    - name: Get Service B FQDN
+      id: service-b-fqdn
+      run: |
+        fqdn=$(az containerapp show --name service-b --resource-group $RESOURCE_GROUP --query "properties.configuration.ingress.fqdn" -o tsv)
+        echo "SERVICE_B_URL=http://$fqdn" >> $GITHUB_ENV
+
     - name: Create or update Service A with revision label
       run: |
         az containerapp create \
@@ -67,7 +73,7 @@ jobs:
           --image ghcr.io/${{ env.GHCR_USER }}/service-a:latest \
           --target-port 8000 \
           --ingress external \
-          --env-vars SERVICE_B_URL=http://service-b:8000 \
+          --env-vars SERVICE_B_URL=${{ env.SERVICE_B_URL }} \
           --registry-server ghcr.io \
           --registry-username ${{ env.GHCR_USER }} \
           --registry-password ${{ env.GHCR_TOKEN }} \
