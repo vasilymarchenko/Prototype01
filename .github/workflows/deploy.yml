@@ -10,14 +10,14 @@ env:
   CONTAINER_ENV: prototype-env
   LOCATION: westeurope
   GHCR_REGISTRY: ghcr.io
-  GHCR_USER: ${{ secrets.GHCR_USERNAME }}
+  GHCR_USER: ${{ vars.GHCR_USERNAME }}
   GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Log in to GHCR
       run: echo "${{ env.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ env.GHCR_USER }} --password-stdin
@@ -33,7 +33,7 @@ jobs:
         docker push ghcr.io/${{ env.GHCR_USER }}/service-b:latest
 
     - name: Azure login
-      uses: azure/login@v1
+      uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -47,8 +47,8 @@ jobs:
           --target-port 8000 \
           --ingress internal \
           --registry-server ghcr.io \
-          --registry-username $GHCR_USER \
-          --registry-password $GHCR_TOKEN
+          --registry-username ${{ env.GHCR_USER }} \
+          --registry-password ${{ env.GHCR_TOKEN }}
 
     - name: Deploy Service A
       run: |
@@ -61,5 +61,5 @@ jobs:
           --ingress external \
           --env-vars SERVICE_B_URL=http://service-b:8000 \
           --registry-server ghcr.io \
-          --registry-username $GHCR_USER \
-          --registry-password $GHCR_TOKEN
+          --registry-username ${{ env.GHCR_USER }} \
+          --registry-password ${{ env.GHCR_TOKEN }}
