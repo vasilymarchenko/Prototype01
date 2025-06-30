@@ -1,9 +1,10 @@
 name: Deploy Two-Container App
 
 on:
-  push:
-    branches:
-      - main
+#   push:
+#     branches:
+#       - main
+  workflow_dispatch:
 
 env:
   RESOURCE_GROUP: prototype01-rg
