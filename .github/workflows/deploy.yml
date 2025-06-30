@@ -45,12 +45,12 @@ jobs:
           --environment $CONTAINER_ENV \
           --image ghcr.io/${{ env.GHCR_USER }}/service-b:latest \
           --target-port 8000 \
-          --ingress internal \
+          --ingress external \
           --registry-server ghcr.io \
           --registry-username ${{ env.GHCR_USER }} \
           --registry-password ${{ env.GHCR_TOKEN }} \
           --revision-suffix b-${{ github.run_number }} \
-          --min-replicas 1 \
+          --min-replicas 0 \
           --max-replicas 1 || \
         az containerapp update \
           --name service-b \
