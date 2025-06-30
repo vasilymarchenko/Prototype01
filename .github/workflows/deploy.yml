@@ -37,7 +37,7 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-    - name: Deploy Service B
+    - name: Create or update Service B with revision label
       run: |
         az containerapp create \
           --name service-b \
@@ -48,9 +48,17 @@ jobs:
           --ingress internal \
           --registry-server ghcr.io \
           --registry-username ${{ env.GHCR_USER }} \
-          --registry-password ${{ env.GHCR_TOKEN }}
+          --registry-password ${{ env.GHCR_TOKEN }} \
+          --revision-suffix b-${{ github.run_number }} \
+          --min-replicas 1 \
+          --max-replicas 1 || \
+        az containerapp update \
+          --name service-b \
+          --resource-group $RESOURCE_GROUP \
+          --image ghcr.io/${{ env.GHCR_USER }}/service-b:latest \
+          --revision-suffix b-${{ github.run_number }}
 
-    - name: Deploy Service A
+    - name: Create or update Service A with revision label
       run: |
         az containerapp create \
           --name service-a \
@@ -62,4 +70,12 @@ jobs:
           --env-vars SERVICE_B_URL=http://service-b:8000 \
           --registry-server ghcr.io \
           --registry-username ${{ env.GHCR_USER }} \
-          --registry-password ${{ env.GHCR_TOKEN }}
+          --registry-password ${{ env.GHCR_TOKEN }} \
+          --revision-suffix a-${{ github.run_number }} \
+          --min-replicas 0 \
+          --max-replicas 1 || \
+        az containerapp update \
+          --name service-a \
+          --resource-group $RESOURCE_GROUP \
+          --image ghcr.io/${{ env.GHCR_USER }}/service-a:latest \
+          --revision-suffix a-${{ github.run_number }}
